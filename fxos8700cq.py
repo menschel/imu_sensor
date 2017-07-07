@@ -34,7 +34,7 @@ class FXOS8700CQ():
 
     def _read(self,reg,size=1):
         if size == 1:
-            data = bytearray(self.bus.read_byte_data(self.addr,reg))
+            data = self.bus.read_byte_data(self.addr,reg)
         else:
             data = bytearray(self.bus.read_i2c_block_data(self.addr, reg, size))
         return data
