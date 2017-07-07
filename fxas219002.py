@@ -111,7 +111,7 @@ class FXAS21002():
         if len(regs) != 7:
             raise RuntimeError("Not enough bytes to extract values from")
         self.status = regs[0]
-        self.gyro_xyz = [((x>>2)*0.061035156) for x in struct.unpack(">hhh",regs[1:])]#TODO include the factor for range as it is static to 2000deg/s for now
+        self.gyro_xyz = [(x*0.061035156) for x in struct.unpack(">hhh",regs[1:])]#TODO include the factor for range as it is static to 2000deg/s for now
         return self.status,self.gyro_xyz
 
 
