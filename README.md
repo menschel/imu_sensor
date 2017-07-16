@@ -7,4 +7,24 @@ Note: The gyroscope needs a software filter while the accelometer has an interna
 
 There is basic functionality to read a single or both sensors in parallel.
 
-It was written for and tested on a Raspberry Pi 3.
+It was written for and tested on a Raspberry Pi 3 and a Raspberry Zero W.
+
+# Some measurements of the standard deviation.
+
+fxas219002 gyro
+
+x	1.0627007671956068
+y	0.8387527442221671
+z	0.391810523916495
+
+fxos8700cq accel
+
+x	10.865536710167609
+y	34.90547711749545
+z	12.529244280482354
+
+fxos8700cq mag
+
+x	0.9219213632409223
+y	0.8582418074179329
+z	1.1792790170269292

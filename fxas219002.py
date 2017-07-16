@@ -4,6 +4,8 @@
 import smbus
 import struct
 import time
+from simple_kalman import calc_std_deviation
+
 
 FXAS21002_I2C_ID = 0x21
 FXAS21002_DEVICE_ID_REG = 0xC
@@ -115,20 +117,39 @@ class FXAS21002():
         return self.status,self.gyro_xyz
 
 
-if __name__ == "__main__":
+def selftest(testmode="standard deviation"):
     #test code for gyrometer fxas219002
     import time
     FXAS21002_obj = FXAS21002()
     FXAS21002_obj.startup()
-    cnt = 0
-    try:
-        while cnt < 1000:
-            #loop for 100 seconds just to get a feel about moving the sensor by hand
-            status,gyro_xyz = FXAS21002_obj.get_values()
-            print("gyro (deg/s) {0:.2f} {1:.2f} {2:.2f}".format(*gyro_xyz))
-            time.sleep(0.1)
-            cnt += 1
+    testcount = 100
+    testcycle = 0.1
+    if testmode == "standard deviation":
+        print("do not move the sensor while standard deviation is calculated - takes about {0} seconds".format(testcount*testcycle))
+        cnt = 0
+        vals = []
+        try:
+            while cnt < testcount:
+                #loop for 100 seconds just to get a feel about moving the sensor by hand
+                status,gyro_xyz = FXAS21002_obj.get_values()
+                #print("gyro (deg/s) {0:.2f} {1:.2f} {2:.2f}".format(*gyro_xyz))
+                time.sleep(testcycle)
+                cnt += 1
+                vals.append(gyro_xyz)
+        except KeyboardInterrupt:
+            print("exit")
 
-    except KeyboardInterrupt:
-        print("exit")
-
+        #calculate the standard deviation
+        std_dev = []
+        for i in range(3):
+            std_dev.append(calc_std_deviation([val[i] for val in vals]))
+    
+        print("Standard Deviation fxas219002 gyroscope\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev))
+if __name__ == '__main__':
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("-c", "--command", dest="command", default='standard deviation',
+                      help="COMMAND to execute", metavar="COMMAND")
+    (options, args) = parser.parse_args()
+    selftest(testmode=options.command)
+ 

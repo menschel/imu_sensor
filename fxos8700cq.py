@@ -4,6 +4,7 @@
 import smbus
 import struct
 import time
+from simple_kalman import calc_std_deviation
 
 FXOS8700CQ_I2C_ID = 0x1F
 FXOS8700CQ_DEVICEID = 0xC7
@@ -89,20 +90,61 @@ class FXOS8700CQ():
         return self.status,self.acc_xyz,self.mag_xyz
 
 
-if __name__ == "__main__":
+def selftest(testmode="standard deviation"):
     #test code for accelerometer fxos8700cq
     import time
     FXOS8700CQ_obj = FXOS8700CQ()
     FXOS8700CQ_obj.startup()
-    cnt = 0
-    try:
-        while cnt < 1000:
-            #loop for 100 seconds just to get a feel about moving the sensor by hand
-            status,accel_xyz,mag_xyz = FXOS8700CQ_obj.get_values()
-            print("accel (mg) {0:.2f} {1:.2f} {2:.2f}".format(*accel_xyz))
-            print("mag (uT) {0:.2f} {1:.2f} {2:.2f}".format(*mag_xyz))
-            time.sleep(0.1)
-            cnt += 1
+    testcount = 100
+    testcycle = 0.1
+    if testmode == "standard deviation":
+        import numpy as np
+        print("do not move the sensor while standard deviation is calculated - takes about {0} seconds".format(testcount*testcycle))
+        cnt = 0
+        vals_accel = []
+        vals_mag = []
+        try:
+            while cnt < testcount:
+                #loop for 100 seconds just to get a feel about moving the sensor by hand
+                status,accel_xyz,mag_xyz = FXOS8700CQ_obj.get_values()
+                #print("accel (mg) {0:.2f} {1:.2f} {2:.2f}".format(*accel_xyz))
+                #print("mag (uT) {0:.2f} {1:.2f} {2:.2f}".format(*mag_xyz))
+                time.sleep(testcycle)
+                cnt += 1
+                vals_accel.append(accel_xyz)
+                vals_mag.append(mag_xyz)
 
-    except KeyboardInterrupt:
-        print("exit")
+        except KeyboardInterrupt:
+            print("exit")
+
+        #calculate the standard deviation
+        std_dev_accel = []
+        for i in range(2):
+            std_dev_accel.append(calc_std_deviation([val[i] for val in vals_accel]))#x and y
+
+        std_dev_accel.append(calc_std_deviation([val[2]-1000 for val in vals_accel]))# z but minus 1g
+    
+        print("Standard Deviation for fxos8700cq accelerometer\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev_accel))
+
+        std_dev_mag = []
+        mag_mean = []
+        for i in range(3):
+            thisdimvals = [val[i] for val in vals_mag]
+            mag_mean.append(np.mean(thisdimvals))
+            std_dev_mag.append(calc_std_deviation([val-mag_mean[i] for val in thisdimvals]))
+        print("Standard Deviation for fxos8700cq magnetometer\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev_mag))
+            
+
+
+
+        
+
+
+if __name__ == '__main__':
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("-c", "--command", dest="command", default='standard deviation',
+                      help="COMMAND to execute", metavar="COMMAND")
+    (options, args) = parser.parse_args()
+    selftest(testmode=options.command)
+ 
