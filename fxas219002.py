@@ -4,7 +4,7 @@
 import smbus
 import struct
 import time
-from simple_kalman import calc_std_deviation
+import numpy as np
 
 
 FXAS21002_I2C_ID = 0x21
@@ -140,10 +140,7 @@ def selftest(testmode="standard deviation"):
             print("exit")
 
         #calculate the standard deviation
-        std_dev = []
-        for i in range(3):
-            std_dev.append(calc_std_deviation([val[i] for val in vals]))
-    
+        std_dev = np.std(np.array(vals))
         print("Standard Deviation fxas219002 gyroscope\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev))
 if __name__ == '__main__':
     from optparse import OptionParser

@@ -4,7 +4,7 @@
 import smbus
 import struct
 import time
-from simple_kalman import calc_std_deviation
+import numpy as np
 
 FXOS8700CQ_I2C_ID = 0x1F
 FXOS8700CQ_DEVICEID = 0xC7
@@ -98,7 +98,6 @@ def selftest(testmode="standard deviation"):
     testcount = 100
     testcycle = 0.1
     if testmode == "standard deviation":
-        import numpy as np
         print("do not move the sensor while standard deviation is calculated - takes about {0} seconds".format(testcount*testcycle))
         cnt = 0
         vals_accel = []
@@ -118,20 +117,13 @@ def selftest(testmode="standard deviation"):
             print("exit")
 
         #calculate the standard deviation
-        std_dev_accel = []
-        for i in range(2):
-            std_dev_accel.append(calc_std_deviation([val[i] for val in vals_accel]))#x and y
+        std_dev_accel = [np.std(np.array([val[i] for val in vals_accel])) for i in range(2)]
+        std_dev_accel.append(np.std(np.array([val[2]-1000 for val in vals_accel])))
 
-        std_dev_accel.append(calc_std_deviation([val[2]-1000 for val in vals_accel]))# z but minus 1g
-    
         print("Standard Deviation for fxos8700cq accelerometer\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev_accel))
 
-        std_dev_mag = []
-        mag_mean = []
-        for i in range(3):
-            thisdimvals = [val[i] for val in vals_mag]
-            mag_mean.append(np.mean(thisdimvals))
-            std_dev_mag.append(calc_std_deviation([val-mag_mean[i] for val in thisdimvals]))
+        std_dev_mag = [np.std(np.array([val[i] for val in vals_mag])) for i in range(3)]
+        
         print("Standard Deviation for fxos8700cq magnetometer\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev_mag))
             
 
