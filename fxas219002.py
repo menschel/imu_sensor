@@ -140,7 +140,7 @@ def selftest(testmode="standard deviation"):
             print("exit")
 
         #calculate the standard deviation
-        std_dev = np.std(np.array(vals))
+        std_dev = [np.std(np.array([val[i] for val in vals])) for i in range(3)]
         print("Standard Deviation fxas219002 gyroscope\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev))
 if __name__ == '__main__':
     from optparse import OptionParser
