@@ -5,6 +5,8 @@ import smbus
 import struct
 import time
 import numpy as np
+import math
+from rotate import rotate_to_global_frame
 
 FXOS8700CQ_I2C_ID = 0x1F
 FXOS8700CQ_DEVICEID = 0xC7
@@ -95,11 +97,11 @@ def selftest(testmode="standard deviation"):
     import time
     FXOS8700CQ_obj = FXOS8700CQ()
     FXOS8700CQ_obj.startup()
-    testcount = 100
+    testcount = 1000
     testcycle = 0.1
+    cnt = 0
     if testmode == "standard deviation":
         print("do not move the sensor while standard deviation is calculated - takes about {0} seconds".format(testcount*testcycle))
-        cnt = 0
         vals_accel = []
         vals_mag = []
         try:
@@ -125,7 +127,25 @@ def selftest(testmode="standard deviation"):
         std_dev_mag = [np.std(np.array([val[i] for val in vals_mag])) for i in range(3)]
         
         print("Standard Deviation for fxos8700cq magnetometer\nx\t{0}\ny\t{1}\nz\t{2}".format(*std_dev_mag))
-            
+    elif testmode == "rotate":
+        while cnt < testcount:
+            status,accel_xyz,mag_xyz = FXOS8700CQ_obj.get_values()
+            accel_xyz,mag_xyz,arcs = rotate_to_global_frame(accel_xyz,mag_xyz)
+            print("{0:5.1f}:{1:5.1f}:{2:5.1f}".format(*[math.degrees(x) for x in arcs]))
+            time.sleep(testcycle)
+            cnt += 1
+    elif testmode == "arcs":
+        while cnt < testcount:
+            status,accel_xyz,mag_xyz = FXOS8700CQ_obj.get_values()
+            roll = math.degrees(math.atan2(accel_xyz[1],accel_xyz[2]))
+            pitch = math.degrees(math.atan2(accel_xyz[0],accel_xyz[2]))
+            yaw = math.degrees(math.atan2(-mag_xyz[1],mag_xyz[0]))
+            #print("{0:4.1f} {1:4.1f} {2:4.1f}".format(roll,pitch,yaw))
+            print("{0} {1:4.1f}".format("{0:4.1f} {1:4.1f} {2:4.1f}".format(*mag_xyz),yaw))
+            time.sleep(testcycle)
+            cnt += 1
+
+    
 
 
 
